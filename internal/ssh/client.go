@@ -131,31 +131,31 @@ func (c *Client) ExecuteWithSudo(command string) (string, error) {
 }
 
 // CreateUser creates a new user on the remote VM
-func (c *Client) CreateUser(username, password string) error {
+func (c *Client) CreateUser(username, password string) (string, error) {
 	if c.client == nil {
-		return fmt.Errorf("not connected")
+		return "", fmt.Errorf("not connected")
 	}
 
 	// Validate username
 	if !isValidUsername(username) {
-		return fmt.Errorf("invalid username: %s", username)
+		return "", fmt.Errorf("invalid username: %s", username)
 	}
 
 	// Create user
 	cmd := fmt.Sprintf("/usr/sbin/useradd -m -s /bin/bash %s", username)
-	_, err := c.ExecuteWithSudo(cmd)
+	output, err := c.ExecuteWithSudo(cmd)
 	if err != nil {
-		return fmt.Errorf("failed to create user: %w", err)
+		return "", fmt.Errorf("failed to create user: %w", err)
 	}
 
 	// Set password
 	passCmd := fmt.Sprintf("echo '%s:%s' | /usr/sbin/chpasswd", username, password)
 	_, err = c.ExecuteWithSudo(passCmd)
 	if err != nil {
-		return fmt.Errorf("failed to set password: %w", err)
+		return output, fmt.Errorf("failed to set password: %w", err)
 	}
 
-	return nil
+	return output, nil
 }
 
 // UserExists checks if a user exists on the remote VM
