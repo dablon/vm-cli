@@ -142,7 +142,7 @@ func main() {
 
 					fmt.Printf("👤 Creando usuario %s...\n", newUser)
 
-					_, err := client.CreateUser(newUser, newPass)
+					output, err := client.CreateUser(newUser, newPass)
 					if err != nil {
 						return fmt.Errorf("❌ Error al crear usuario: %w", err)
 					}
@@ -165,6 +165,7 @@ func main() {
 						fmt.Println(pubKey)
 					}
 
+					fmt.Println(output)
 					return nil
 				},
 			},

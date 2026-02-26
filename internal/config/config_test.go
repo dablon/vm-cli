@@ -88,3 +88,23 @@ func TestConfig_Save_InvalidPath(t *testing.T) {
 		t.Error("Expected error for invalid path")
 	}
 }
+
+func TestConfig_Empty(t *testing.T) {
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "empty.json")
+
+	cfg := &Config{}
+	err := cfg.Save(tmpFile)
+	if err != nil {
+		t.Fatalf("Failed to save empty config: %v", err)
+	}
+
+	loaded, err := Load(tmpFile)
+	if err != nil {
+		t.Fatalf("Failed to load empty config: %v", err)
+	}
+
+	if loaded.VMHost != "" {
+		t.Errorf("Expected empty VMHost, got %s", loaded.VMHost)
+	}
+}

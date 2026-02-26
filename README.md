@@ -1,124 +1,166 @@
-# vm-cli
+# vm-cli - Remote VM Management CLI
 
-CLI para ejecutar comandos en VMs Linux remotas via SSH.
+A command-line tool for managing remote Linux VMs via SSH. Built with Go.
 
-## Características
+## Features
 
-- 🔌 Conexión SSH segura
-- 📟 Ejecución de comandos remotos
-- 👤 Gestión de usuarios (crear, eliminar, verificar)
-- 🐳 Comandos Docker integrados
-- 📊 Información del sistema
-- 🔐 Soporte para variable de entorno `VM_CLI_PASSWORD`
-- ✅ Código estructurado y testeable
+- 🔌 SSH connection to remote VMs
+- 📟 Execute commands remotely
+- 👤 Create and manage users
+- 🐳 Docker container management
+- 📊 System information
+- ⚙️ Configuration file support
+- 🔐 Environment variable support for passwords
 
-## Instalación
+## Installation
+
+### From Source
 
 ```bash
-# Clonar el repositorio
 git clone https://github.com/dablon/vm-cli.git
 cd vm-cli
-
-# Compilar
 go build -o vm-cli .
-
-# O usar el binario precompilado
-./vm-cli
 ```
 
-## Uso
+### Download Binary
 
-### Conexión básica
+Download the latest binary from [Releases](https://github.com/dablon/vm-cli/releases)
+
+## Usage
+
+### Basic Connection
 
 ```bash
-# Usando variable de entorno (RECOMENDADO)
-export VM_CLI_PASSWORD="tu_contraseña"
-./vm-cli connect --host 192.168.1.100 --user mi_usuario
+# Using environment variable (RECOMMENDED)
+export VM_CLI_PASSWORD="your_password"
+./vm-cli connect --host 142.44.247.203 --user myuser
 
-# O con argumento
-./vm-cli connect --host 192.168.1.100 --user mi_usuario --password "tu_contraseña"
+# Or with argument
+./vm-cli connect --host 142.44.247.203 --user myuser --password mypass
 ```
 
-### Ejecutar comandos
+### Execute Commands
 
 ```bash
-./vm-cli exec --host 192.168.1.100 --user mi_usuario --command "ls -la"
+# Run any command
+./vm-cli exec --host 142.44.247.203 --user myuser --password mypass --command "docker ps"
+
+# List all containers (including stopped)
+./vm-cli exec --host 142.44.247.203 --user myuser --command "docker ps -a"
 ```
 
-### Gestión de usuarios
+### User Management
 
 ```bash
-# Crear usuario
-./vm-cli user-create --host 192.168.1.100 --user admin --new-user nuevo_usuario --new-password "pass123"
+# Create a new user
+./vm-cli user-create --host 142.44.247.203 --user admin --password adminpass --new-user newuser --new-password newpass
 
-# Verificar si existe
-./vm-cli user-exists --host 192.168.1.100 --user admin --check-user nuevo_usuario
+# Check if user exists
+./vm-cli user-exists --host 142.44.247.203 --user admin --password adminpass --check-user username
 
-# Eliminar usuario
-./vm-cli user-delete --host 192.168.1.100 --user admin --username nuevo_usuario
+# Delete a user
+./vm-cli user-delete --host 142.44.247.203 --user admin --password adminpass --username username
 ```
 
-### Docker
+### Docker Management
 
 ```bash
-# Listar contenedores
-./vm-cli docker ps --host 192.168.1.100 --user mi_usuario
+# List containers
+./vm-cli docker ps --host 142.44.247.203 --user myuser --password mypass
 
-# Información de Docker
-./vm-cli docker info --host 192.168.1.100 --user mi_usuario
+# Show Docker info
+./vm-cli docker info --host 142.44.247.203 --user myuser --password mypass
 ```
 
-### Información del sistema
+### System Information
 
 ```bash
-./vm-cli sysinfo --host 192.168.1.100 --user mi_usuario
+./vm-cli sysinfo --host 142.44.247.203 --user myuser --password mypass
 ```
 
-### Inicializar configuración
+### Configuration
 
 ```bash
-./vm-cli init --host 192.168.1.100 --user mi_usuario --agent mi_agente
+# Initialize config file
+./vm-cli init --host 142.44.247.203 --user myuser --password mypass --agent myagent
 ```
 
-## Comandos disponibles
+## Environment Variables
 
-| Comando | Descripción |
-|---------|-------------|
-| `connect` | Conectar a la VM y ejecutar comando de prueba |
-| `exec` | Ejecutar un comando en la VM |
-| `user-create` | Crear un nuevo usuario |
-| `user-exists` | Verificar si un usuario existe |
-| `user-delete` | Eliminar un usuario |
-| `sysinfo` | Obtener información del sistema |
-| `docker ps` | Listar contenedores Docker |
-| `docker info` | Información de Docker |
-| `init` | Inicializar configuración |
-
-## Variables de entorno
-
-| Variable | Descripción |
+| Variable | Description |
 |----------|-------------|
-| `VM_CLI_PASSWORD` | Contraseña SSH (alternativa a --password) |
+| `VM_CLI_PASSWORD` | SSH password (alternative to --password) |
 
-## Seguridad
+## Commands
 
-⚠️ **Recomendaciones:**
-- Usa la variable de entorno `VM_CLI_PASSWORD` en lugar de pasar la contraseña como argumento
-- Las contraseñas nunca se almacenan en disco
-- Soporte para claves SSH
+| Command | Description |
+|---------|-------------|
+| `connect` | Connect to VM and run test command |
+| `exec` | Execute a command on the remote VM |
+| `user-create` | Create a new user on the VM |
+| `user-exists` | Check if a user exists |
+| `user-delete` | Delete a user from the VM |
+| `sysinfo` | Get system information |
+| `docker ps` | List Docker containers |
+| `docker info` | Show Docker information |
+| `init` | Initialize configuration file |
 
-## Desarrollo
+## Examples
+
+### Full Workflow
 
 ```bash
-# Estructura del proyecto
-vm-cli/
-├── cmd/              # Comandos CLI
-├── internal/
-│   └── ssh/          # Cliente SSH
-├── main.go           # Punto de entrada
-└── go.mod            # Dependencias
+# 1. Connect and check system
+./vm-cli connect --host 142.44.247.203 --user nalcaraz --password "mypassword"
+
+# 2. Create a user for your agent
+./vm-cli user-create --host 142.44.247.203 --user nalcaraz --password "mypassword" \
+  --new-user agent_001 --new-password "agent123"
+
+# 3. Use the new user
+./vm-cli exec --host 142.44.247.203 --user agent_001 --password "agent123" \
+  --command "docker run hello-world"
+
+# 4. List containers
+./vm-cli docker ps --host 142.44.247.203 --user agent_001 --password "agent123"
 ```
 
-## Licencia
+## Security Notes
+
+- ⚠️ Never commit passwords to version control
+- Use environment variables: `export VM_CLI_PASSWORD="..."`
+- Consider using SSH keys instead of passwords
+- The `--password` flag is visible in process list
+
+## Development
+
+### Run Tests
+
+```bash
+go test ./...
+```
+
+### Build
+
+```bash
+go build -o vm-cli .
+```
+
+## Project Structure
+
+```
+vm-cli/
+├── cmd/
+│   └── commands.go       # CLI commands
+├── internal/
+│   └── ssh/
+│       ├── client.go    # SSH client
+│       └── client_test.go
+├── main.go              # Entry point
+├── go.mod               # Dependencies
+└── README.md            # This file
+```
+
+## License
 
 MIT
