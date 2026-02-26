@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # Servidor SSH de prueba para E2E tests
+  ssh-server:
+    image: alpine:latest
+    container_name: vm-cli-test-ssh
+    hostname: test-vm
+    volumes:
+      - ssh-data:/home
+    command: |
+      sh -c "
+        apk add --no-cache openssh bash docker-cli;
+        echo 'root:root123' | chpasswd;
+        echo 'testuser:testpass' | chpasswd;
+        sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config;
+        sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config;
+        /usr/sbin/sshd -D &
+        sleep 5
+        tail -f /dev/null
+      "
+    ports:
+      - "2222:22"
+    healthcheck:
+      test: ["CMD", "sshpass", "-p", "root", "-P", "root", "ssh", "-o", "StrictHostKeyChecking=no", "-p", "22", "root@localhost", "echo ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  ssh-data:

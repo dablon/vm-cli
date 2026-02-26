@@ -26,7 +26,7 @@ func NewConnectCommand() *cli.Command {
 		Name:  "connect",
 		Usage: "Connect to remote VM and run test command",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "host", Required: true, Aliases: []string{"h"}, Usage: "VM hostname or IP"},
+			&cli.StringFlag{Name: "host", Required: true, Usage: "VM hostname or IP"},
 			&cli.StringFlag{Name: "user", Required: true, Aliases: []string{"u"}, Usage: "SSH username"},
 			&cli.StringFlag{Name: "password", Aliases: []string{"p"}, Usage: "SSH password (or VM_CLI_PASSWORD)"},
 			&cli.StringFlag{Name: "port", Value: "22", Aliases: []string{"P"}, Usage: "SSH port"},
@@ -71,7 +71,7 @@ func NewExecCommand() *cli.Command {
 		Name:  "exec",
 		Usage: "Execute a command on the remote VM",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "host", Required: true, Aliases: []string{"h"}},
+			&cli.StringFlag{Name: "host", Required: true, Aliases: []string{}},
 			&cli.StringFlag{Name: "user", Required: true, Aliases: []string{"u"}},
 			&cli.StringFlag{Name: "password", Aliases: []string{"p"}},
 			&cli.StringFlag{Name: "port", Value: "22", Aliases: []string{"P"}},
@@ -112,7 +112,7 @@ func NewUserCreateCommand() *cli.Command {
 		Name:  "user-create",
 		Usage: "Create a new user on the remote VM",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "host", Required: true, Aliases: []string{"h"}},
+			&cli.StringFlag{Name: "host", Required: true, Aliases: []string{}},
 			&cli.StringFlag{Name: "user", Required: true, Aliases: []string{"u"}},
 			&cli.StringFlag{Name: "password", Aliases: []string{"p"}},
 			&cli.StringFlag{Name: "port", Value: "22", Aliases: []string{"P"}},
@@ -158,7 +158,7 @@ func NewUserExistsCommand() *cli.Command {
 		Name:  "user-exists",
 		Usage: "Check if a user exists on the remote VM",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "host", Required: true, Aliases: []string{"h"}},
+			&cli.StringFlag{Name: "host", Required: true, Aliases: []string{}},
 			&cli.StringFlag{Name: "user", Required: true, Aliases: []string{"u"}},
 			&cli.StringFlag{Name: "password", Aliases: []string{"p"}},
 			&cli.StringFlag{Name: "port", Value: "22", Aliases: []string{"P"}},
@@ -203,7 +203,7 @@ func NewUserDeleteCommand() *cli.Command {
 		Name:  "user-delete",
 		Usage: "Delete a user from the remote VM",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "host", Required: true, Aliases: []string{"h"}},
+			&cli.StringFlag{Name: "host", Required: true, Aliases: []string{}},
 			&cli.StringFlag{Name: "user", Required: true, Aliases: []string{"u"}},
 			&cli.StringFlag{Name: "password", Aliases: []string{"p"}},
 			&cli.StringFlag{Name: "port", Value: "22", Aliases: []string{"P"}},
@@ -246,7 +246,7 @@ func NewSystemInfoCommand() *cli.Command {
 		Name:  "sysinfo",
 		Usage: "Get system information from the remote VM",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "host", Required: true, Aliases: []string{"h"}},
+			&cli.StringFlag{Name: "host", Required: true, Aliases: []string{}},
 			&cli.StringFlag{Name: "user", Required: true, Aliases: []string{"u"}},
 			&cli.StringFlag{Name: "password", Aliases: []string{"p"}},
 			&cli.StringFlag{Name: "port", Value: "22", Aliases: []string{"P"}},
@@ -290,7 +290,7 @@ func NewDockerCommand() *cli.Command {
 				Name:  "ps",
 				Usage: "List containers",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "host", Required: true, Aliases: []string{"h"}},
+					&cli.StringFlag{Name: "host", Required: true, Aliases: []string{}},
 					&cli.StringFlag{Name: "user", Required: true, Aliases: []string{"u"}},
 					&cli.StringFlag{Name: "password", Aliases: []string{"p"}},
 					&cli.StringFlag{Name: "port", Value: "22", Aliases: []string{"P"}},
@@ -327,7 +327,7 @@ func NewDockerCommand() *cli.Command {
 				Name:  "info",
 				Usage: "Show Docker info",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "host", Required: true, Aliases: []string{"h"}},
+					&cli.StringFlag{Name: "host", Required: true, Aliases: []string{}},
 					&cli.StringFlag{Name: "user", Required: true, Aliases: []string{"u"}},
 					&cli.StringFlag{Name: "password", Aliases: []string{"p"}},
 					&cli.StringFlag{Name: "port", Value: "22", Aliases: []string{"P"}},
@@ -369,7 +369,7 @@ func NewInitCommand() *cli.Command {
 		Name:  "init",
 		Usage: "Initialize configuration file",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "host", Required: true, Aliases: []string{"h"}},
+			&cli.StringFlag{Name: "host", Required: true, Aliases: []string{}},
 			&cli.StringFlag{Name: "user", Required: true, Aliases: []string{"u"}},
 			&cli.StringFlag{Name: "password", Aliases: []string{"p"}},
 			&cli.StringFlag{Name: "port", Value: "22", Aliases: []string{"P"}},
