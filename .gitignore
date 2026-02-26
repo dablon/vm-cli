@@ -1,15 +1,31 @@
 # Binaries
 vm-cli
-vm-cli-test
+vm-cli.exe
 *.exe
+
+# Test binary
+vm-cli-test
+
+# Go
+*.test
+*.out
+vendor/
 
 # IDE
 .idea/
 .vscode/
 *.swp
+*.swo
 
 # OS
 .DS_Store
+Thumbs.db
 
-# Config local
-*.local.json
+# Config with secrets
+config.yaml
+config.json
+*.local.yaml
+
+# Temp
+*.tmp
+*.log
