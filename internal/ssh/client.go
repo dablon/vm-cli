@@ -16,6 +16,45 @@ type Client struct {
 	client   *ssh.Client
 }
 
+// ExecuteWithSudo ejecuta un comando que requiere sudo pidiendo TTY
+func (c *Client) ExecuteWithSudo(command string) (string, error) {
+	if c.client == nil {
+		return "", fmt.Errorf("no hay conexión SSH activa")
+	}
+
+	session, err := c.client.NewSession()
+	if err != nil {
+		return "", fmt.Errorf("error al crear sesión: %w", err)
+	}
+	defer session.Close()
+
+	// Request PTY para sudo interactivo
+	modes := ssh.TerminalModes{
+		ssh.ECHO:          0,
+		ssh.TTY_OP_ISPEED: 14400,
+		ssh.TTY_OP_OSPEED: 14400,
+	}
+	
+	if err := session.RequestPty("xterm", 80, 40, modes); err != nil {
+		return "", fmt.Errorf("error al solicitar PTY: %w", err)
+	}
+
+	// Ejecutar comando con sudo
+	cmd := fmt.Sprintf("sudo %s", command)
+	output, err := session.CombinedOutput(cmd)
+	if err != nil {
+		return "", fmt.Errorf("error al ejecutar comando sudo: %w", err)
+	}
+
+	return string(output), nil
+}
+
+// RunWithSudo ejecuta un comando que requiere sudo usando -S y <<< (herestring)
+func (c *Client) RunWithSudo(command string) (string, error) {
+	sudoCmd := fmt.Sprintf("sudo -S -k %s <<< '%s'", command, c.Password)
+	return c.Execute(sudoCmd)
+}
+
 // NewClient crea un nuevo cliente SSH
 func NewClient(host, user, password, port string) *Client {
 	return &Client{
@@ -32,6 +71,14 @@ func (c *Client) Connect() error {
 		User: c.User,
 		Auth: []ssh.AuthMethod{
 			ssh.Password(c.Password),
+			ssh.KeyboardInteractive(func(name, instruction string, questions []string, echos []bool) ([]string, error) {
+				// Responder automáticamente con la contraseña
+				answers := make([]string, len(questions))
+				for i := range questions {
+					answers[i] = c.Password
+				}
+				return answers, nil
+			}),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
@@ -76,12 +123,20 @@ func (c *Client) Close() error {
 
 // CreateUser crea un nuevo usuario en la VM
 func (c *Client) CreateUser(username, password string) (string, error) {
-	// Crear usuario
-	cmd := fmt.Sprintf("sudo useradd -m -s /bin/bash %s && echo '%s:%s' | sudo chpasswd", username, username, password)
-	output, err := c.Execute(cmd)
+	// Crear usuario con sudo usando PTY
+	cmd := fmt.Sprintf("/usr/sbin/useradd -m -s /bin/bash %s", username)
+	output, err := c.ExecuteWithSudo(cmd)
 	if err != nil {
 		return "", fmt.Errorf("error al crear usuario: %w", err)
 	}
+	
+	// Establecer contraseña
+	passCmd := fmt.Sprintf("echo '%s:%s' | /usr/sbin/chpasswd", username, password)
+	_, err = c.ExecuteWithSudo(passCmd)
+	if err != nil {
+		fmt.Printf("⚠️  Warning: no se pudo establecer contraseña: %v\n", err)
+	}
+	
 	return output, nil
 }
 
