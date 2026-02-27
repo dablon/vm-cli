@@ -1,14 +1,18 @@
 # Binaries
 vm-cli
-vm-cli.exe
 *.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 
 # Test binary
-vm-cli-test
-
-# Go
 *.test
+
+# Output of the go coverage tool
 *.out
+
+# Dependency directories
 vendor/
 
 # IDE
@@ -21,11 +25,6 @@ vendor/
 .DS_Store
 Thumbs.db
 
-# Config with secrets
-config.yaml
-config.json
-*.local.yaml
-
-# Temp
-*.tmp
-*.log
+# Build
+dist/
+build/
