@@ -85,7 +85,11 @@ func (s *ProfileStore) List() []string {
 
 // getConnectionParams returns host, user, password, port from profile or flags
 func getConnectionParams(cCtx *cli.Context) (host, user, password, port string, err error) {
+	// Check both command-level and environment variable for profile
 	profileName := cCtx.String("profile")
+	if profileName == "" {
+		profileName = os.Getenv("VM_CLI_PROFILE")
+	}
 	
 	// Check profile first
 	if profileName != "" {
