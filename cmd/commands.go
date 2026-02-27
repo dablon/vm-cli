@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"vm-cli/internal/ssh"
 
@@ -435,6 +437,78 @@ func NewInitCommand() *cli.Command {
 			} else {
 				fmt.Println("✅ Config already exists at:", configFile)
 			}
+			return nil
+		},
+	}
+}
+
+// NewCopyCommand returns the copy command
+func NewCopyCommand() *cli.Command {
+	return &cli.Command{
+		Name:  "copy",
+		Usage: "Copy files between local and remote VM",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "profile", Usage: "Use a saved profile"},
+			&cli.StringFlag{Name: "host", Usage: "VM hostname or IP"},
+			&cli.StringFlag{Name: "user", Aliases: []string{"u"}, Usage: "SSH username"},
+			&cli.StringFlag{Name: "password", Aliases: []string{"p"}, Usage: "SSH password"},
+			&cli.StringFlag{Name: "port", Value: "22", Aliases: []string{"P"}, Usage: "SSH port"},
+			&cli.StringFlag{Name: "source", Aliases: []string{"s"}, Required: true, Usage: "Source file (use user@host:path for remote)"},
+			&cli.StringFlag{Name: "dest", Aliases: []string{"d"}, Required: true, Usage: "Destination path"},
+			&cli.BoolFlag{Name: "to-remote", Aliases: []string{"to"}, Usage: "Copy to remote (default is from remote)"},
+		},
+		Action: func(cCtx *cli.Context) error {
+			host, user, password, port, err := getConnectionParams(cCtx)
+			if err != nil {
+				return err
+			}
+
+			source := cCtx.String("source")
+			dest := cCtx.String("dest")
+			toRemote := cCtx.Bool("to-remote")
+
+			client := ssh.NewClient(host, user, password, port)
+			if err := client.Connect(); err != nil {
+				return err
+			}
+			defer client.Close()
+
+			if toRemote {
+				// Local to Remote: read local file, encode base64, decode on remote
+				data, err := os.ReadFile(source)
+				if err != nil {
+					return fmt.Errorf("failed to read local file: %v", err)
+				}
+				encoded := base64.StdEncoding.EncodeToString(data)
+				
+				// Write base64 to remote and decode
+				cmd := "echo '" + encoded + "' | base64 -d > " + dest
+				_, err = client.Execute(cmd)
+				if err != nil {
+					return err
+				}
+				fmt.Printf("✅ Copied %s -> %s@%s:%s\n", source, user, host, dest)
+			} else {
+				// Remote to Local: read remote file, encode base64, decode locally
+				cmd := "base64 " + source
+				output, err := client.Execute(cmd)
+				if err != nil {
+					return fmt.Errorf("failed to read remote file: %v", err)
+				}
+				
+				encoded := strings.TrimSpace(output)
+				data, err := base64.StdEncoding.DecodeString(encoded)
+				if err != nil {
+					return fmt.Errorf("failed to decode: %v", err)
+				}
+				
+				err = os.WriteFile(dest, data, 0644)
+				if err != nil {
+					return fmt.Errorf("failed to write local file: %v", err)
+				}
+				fmt.Printf("✅ Copied %s@%s:%s -> %s\n", user, host, source, dest)
+			}
+
 			return nil
 		},
 	}
