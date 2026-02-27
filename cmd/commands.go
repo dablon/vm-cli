@@ -259,7 +259,7 @@ func NewDockerCommand() *cli.Command {
 func NewUserCreateCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "user-create",
-		Usage new user on the: "Create a remote VM",
+		Usage: "Create a new user on the remote VM",
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "profile", Usage: "Use a saved profile"},
 			&cli.StringFlag{Name: "host", Usage: "VM hostname or IP"},

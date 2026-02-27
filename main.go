@@ -15,26 +15,19 @@ func main() {
 		Usage:                "CLI for remote VM management via SSH",
 		EnableBashCompletion: true,
 		Commands: []*cli.Command{
-			// Profile management commands
 			{
 				Name:  "profile-save",
 				Usage: "Save a VM profile",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "name", Aliases: []string{"n"}, Required: true, Usage: "Profile name"},
-					&cli.StringFlag{Name: "host", Aliases: []string{"h"}, Required: true, Usage: "VM hostname or IP"},
+					&cli.StringFlag{Name: "host", Required: true, Usage: "VM hostname or IP"},
 					&cli.StringFlag{Name: "user", Aliases: []string{"u"}, Required: true, Usage: "SSH username"},
 					&cli.StringFlag{Name: "password", Aliases: []string{"p"}, Required: true, Usage: "SSH password"},
-					&cli.StringFlag{Name: "port", Aliases: []string{"P"}, Value: "22", Usage: "SSH port"},
+					&cli.StringFlag{Name: "port", Value: "22", Usage: "SSH port"},
 				},
 				Action: func(c *cli.Context) error {
 					store := cmd.NewProfileStore()
-					store.Add(
-						c.String("name"),
-						c.String("host"),
-						c.String("user"),
-						c.String("password"),
-						c.String("port"),
-					)
+					store.Add(c.String("name"), c.String("host"), c.String("user"), c.String("password"), c.String("port"))
 					fmt.Printf("✅ Profile '%s' saved!\n", c.String("name"))
 					return nil
 				},
@@ -45,10 +38,7 @@ func main() {
 				Action: func(c *cli.Context) error {
 					store := cmd.NewProfileStore()
 					profiles := store.List()
-					if len(profiles) == 0 {
-						fmt.Println("No profiles saved. Use: vm-cli profile-save -n myvm -h 1.2.3.4 -u user -p password")
-						return nil
-					}
+					if len(profiles) == 0 { fmt.Println("No profiles saved."); return nil }
 					fmt.Println("📋 Saved profiles:")
 					for _, name := range profiles {
 						p, _ := store.Get(name)
@@ -60,9 +50,7 @@ func main() {
 			{
 				Name:  "profile-delete",
 				Usage: "Delete a profile",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "name", Aliases: []string{"n"}, Required: true, Usage: "Profile name to delete"},
-				},
+				Flags: []cli.Flag{&cli.StringFlag{Name: "name", Aliases: []string{"n"}, Required: true, Usage: "Profile name"}},
 				Action: func(c *cli.Context) error {
 					store := cmd.NewProfileStore()
 					store.Delete(c.String("name"))
@@ -70,7 +58,6 @@ func main() {
 					return nil
 				},
 			},
-			// Original commands
 			cmd.NewConnectCommand(),
 			cmd.NewExecCommand(),
 			cmd.NewUserCreateCommand(),
@@ -81,10 +68,8 @@ func main() {
 			cmd.NewInitCommand(),
 		},
 		Flags: []cli.Flag{
-			&cli.BoolFlag{
-				Name:  "verbose",
-				Usage: "Verbose output",
-			},
+			&cli.StringFlag{Name: "profile", Usage: "Use saved profile instead of host/user/password flags"},
+			&cli.BoolFlag{Name: "verbose", Usage: "Verbose output"},
 		},
 	}
 
