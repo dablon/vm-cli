@@ -517,3 +517,63 @@ func NewCopyCommand() *cli.Command {
 		},
 	}
 }
+
+// NewFindCommand returns the find command
+func NewFindCommand() *cli.Command {
+	return &cli.Command{
+		Name:  "find",
+		Usage: "Search for files or folders on the remote VM",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "profile", Usage: "Use a saved profile"},
+			&cli.StringFlag{Name: "host", Usage: "VM hostname or IP"},
+			&cli.StringFlag{Name: "user", Aliases: []string{"u"}, Usage: "SSH username"},
+			&cli.StringFlag{Name: "password", Aliases: []string{"p"}, Usage: "SSH password"},
+			&cli.StringFlag{Name: "port", Value: "22", Aliases: []string{"P"}, Usage: "SSH port"},
+			&cli.StringFlag{Name: "directory", Value: "/", Usage: "Directory to search"},
+			&cli.StringFlag{Name: "name", Aliases: []string{"n"}, Required: true, Usage: "File/folder name to search (* and ? supported)"},
+			&cli.StringFlag{Name: "type", Value: "f", Usage: "Type: f (file), d (directory), b (both)"},
+			&cli.IntFlag{Name: "maxdepth", Value: 3, Usage: "Maximum directory depth"},
+			&cli.BoolFlag{Name: "hidden", Usage: "Include hidden files"},
+		},
+		Action: func(cCtx *cli.Context) error {
+			host, user, password, port, err := getConnectionParams(cCtx)
+			if err != nil {
+				return err
+			}
+
+			searchPath := cCtx.String("directory")
+			name := cCtx.String("name")
+			fileType := cCtx.String("type")
+			maxDepth := cCtx.Int("maxdepth")
+			includeHidden := cCtx.Bool("hidden")
+
+			client := ssh.NewClient(host, user, password, port)
+			if err := client.Connect(); err != nil {
+				return err
+			}
+			defer client.Close()
+
+			findCmd := "find " + searchPath + " -maxdepth " + fmt.Sprintf("%d", maxDepth)
+			if !includeHidden {
+				findCmd += " -not -path '*/.*'"
+			}
+			if fileType == "f" {
+				findCmd += " -type f"
+			} else if fileType == "d" {
+				findCmd += " -type d"
+			}
+			findCmd += " -name '" + name + "' 2>/dev/null | head -50"
+
+			output, err := client.Execute(findCmd)
+			if err != nil {
+				return err
+			}
+			if output == "" {
+				fmt.Printf("No files found matching '%s' in %s\n", name, searchPath)
+			} else {
+				fmt.Printf("Found:\n%s\n", output)
+			}
+			return nil
+		},
+	}
+}

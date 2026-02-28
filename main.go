@@ -67,6 +67,7 @@ func main() {
 			cmd.NewDockerCommand(),
 			cmd.NewInitCommand(),
 			cmd.NewCopyCommand(),
+			cmd.NewFindCommand(),
 		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "profile", Usage: "Use saved profile instead of host/user/password flags"},
