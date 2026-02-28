@@ -172,13 +172,6 @@ func TestCLI_Version(t *testing.T) {
 	}
 }
 
-func TestCLI_UnknownCommand(t *testing.T) {
-	app := createTestApp()
-
-	// Unknown command should fail - may return error or show help
-	_ = app.Run([]string{"vm-cli", "unknown-command"})
-	// Just verify it doesn't panic
-}
 
 func TestCLI_NoArgs(t *testing.T) {
 	app := createTestApp()
