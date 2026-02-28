@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Release](https://img.shields.io/github/v/release/dablon/vm-cli)](https://github.com/dablon/vm-cli/releases/latest)
 
-A fast, dependency-free CLI tool for managing remote Linux VMs over SSH. Execute commands, manage Docker containers, and handle user administration - all with a single, intuitive command-line interface.
+A fast, dependency-free CLI tool for managing remote Linux VMs over SSH. Execute commands, manage Docker containers, transfer files, search for files - all with a single, intuitive command-line interface.
 
 ## ✨ Features
 
@@ -16,6 +16,8 @@ A fast, dependency-free CLI tool for managing remote Linux VMs over SSH. Execute
 - 👤 **User Management** - Create, check, and delete remote users
 - 💾 **Profile System** - Save and reuse VM credentials securely
 - 📊 **System Info** - Quick access to system resources (CPU, RAM, disk)
+- 📁 **File Transfer** - Copy files between local and remote
+- 🔍 **File Search** - Find files and folders on remote VM
 - 🔐 **Security** - Support for environment variables and secure credential handling
 
 ## 🚀 Quick Start
@@ -38,14 +40,14 @@ sudo mv vm-cli /usr/local/bin/
 
 ```bash
 # Save your first VM profile (do once)
-./vm-cli profile-save \
+vm-cli profile-save \
   --name production \
   --host 192.168.1.100 \
   --user admin \
   --password your_password
 
 # Or use a custom SSH port
-./vm-cli profile-save \
+vm-cli profile-save \
   --name myserver \
   --host 192.168.1.100 \
   --user root \
@@ -57,13 +59,13 @@ sudo mv vm-cli /usr/local/bin/
 
 ```bash
 # Using saved profile (no credentials needed!)
-./vm-cli --profile production exec --command "uptime"
+vm-cli exec --profile production --command "uptime"
 
 # List Docker containers
-./vm-cli -p production docker ps
+vm-cli exec --profile production --command "docker ps"
 
 # Get system information
-./vm-cli -p production sysinfo
+vm-cli exec --profile production --command "df -h"
 ```
 
 ## 📖 Usage
@@ -84,41 +86,71 @@ vm-cli profile-delete --name oldvm
 ### Command Execution
 
 ```bash
-# Basic command execution
+# Basic command execution (profile flag must come AFTER exec!)
 vm-cli exec --profile myvm --command "df -h"
 
 # With inline credentials (not recommended)
 vm-cli exec --host 192.168.1.100 --user admin --password secret --command "docker ps"
+
+# Using environment variable
+export VM_CLI_PROFILE=myvm
+vm-cli exec --command "uptime"
 ```
 
 ### Docker Management
 
 ```bash
 # List containers
-vm-cli --profile myvm docker ps
+vm-cli exec --profile myvm --command "docker ps"
 
 # View container logs
-vm-cli --profile myvm docker logs --container myapp --lines 50
+vm-cli exec --profile myvm --command "docker logs myapp --tail 50"
+```
+
+### File Transfer
+
+```bash
+# Copy file FROM local TO remote
+vm-cli copy --profile myvm --source=./localfile.txt --dest=/tmp/remotefile.txt --to-remote
+
+# Copy file FROM remote TO local
+vm-cli copy --profile myvm --source=/tmp/remotefile.txt --dest=./localfile.txt
+```
+
+### File Search
+
+```bash
+# Search for files by name pattern
+vm-cli find --profile myvm --name "*.json"
+
+# Search for directories
+vm-cli find --profile myvm --name "crypto*" --type d
+
+# In specific directory with depth
+vm-cli find --profile myvm --directory /home --name "*.log" --maxdepth 3
+
+# Include hidden files
+vm-cli find --profile myvm --name ".env*" --hidden
 ```
 
 ### User Management
 
 ```bash
 # Create a new user
-vm-cli --profile myvm user-create --new-user developer --new-password "secure123"
+vm-cli exec --profile myvm --command "sudo useradd -m developer"
 
 # Check if user exists
-vm-cli --profile myvm user-exists --check-user developer
+vm-cli exec --profile myvm --command "id developer"
 
 # Delete a user
-vm-cli --profile myvm user-delete --delete-user developer
+vm-cli exec --profile myvm --command "sudo userdel developer"
 ```
 
 ### System Information
 
 ```bash
 # Get system stats (CPU, Memory, Disk)
-vm-cli --profile myvm sysinfo
+vm-cli exec --profile myvm --command "echo CPU && lscpu | grep 'Model name' && echo MEMORY && free -h && echo DISK && df -h"
 ```
 
 ## 🔐 Security
@@ -128,7 +160,7 @@ vm-cli --profile myvm sysinfo
 ### Recommended Practices
 
 1. **Use Profiles** - Store credentials locally with `profile-save`
-2. **Environment Variables** - Use `VM_CLI_PASSWORD` instead of CLI flags
+2. **Environment Variables** - Use `VM_CLI_PASSWORD` or `VM_CLI_PROFILE` instead of CLI flags
 3. **SSH Keys** - Prefer SSH key-based authentication when possible
 4. **Rotate Passwords** - Regularly update stored credentials
 
@@ -165,19 +197,39 @@ GOOS=windows GOARCH=amd64 go build -o vm-cli.exe .
 
 ## 📝 Commands Reference
 
-| Command | Description |
-|---------|-------------|
-| `profile-save` | Save a VM profile |
-| `profile-list` | List saved profiles |
-| `profile-delete` | Delete a profile |
-| `exec` | Execute a command on remote VM |
-| `connect` | Test SSH connection |
-| `user-create` | Create a remote user |
-| `user-exists` | Check if user exists |
-| `user-delete` | Delete a remote user |
-| `sysinfo` | Get system information |
-| `docker` | Docker management (ps, logs) |
-| `init` | Initialize config directory |
+| Command | Alias | Description |
+|---------|-------|-------------|
+| `profile-save` | - | Save a VM profile |
+| `profile-list` | - | List saved profiles |
+| `profile-delete` | - | Delete a profile |
+| `exec` | - | Execute a command on remote VM |
+| `connect` | - | Test SSH connection |
+| `user-create` | - | Create a remote user |
+| `user-exists` | - | Check if user exists |
+| `user-delete` | - | Delete a remote user |
+| `sysinfo` | - | Get system information |
+| `docker` | - | Docker management (ps, logs) |
+| `init` | - | Initialize config directory |
+| `copy` | - | Copy files between local and remote |
+| `find` | - | Search for files/folders on remote VM |
+
+### Find Options
+
+| Flag | Alias | Default | Description |
+|------|-------|---------|-------------|
+| `--name` | `-n` | (required) | File/folder name pattern (* and ? supported) |
+| `--directory` | - | `/` | Directory to search |
+| `--type` | `-t` | `f` | Type: `f` (file), `d` (directory), `b` (both) |
+| `--maxdepth` | - | 3 | Maximum directory depth |
+| `--hidden` | - | false | Include hidden files |
+
+### Copy Options
+
+| Flag | Alias | Description |
+|------|-------|-------------|
+| `--source` | `-s` | Source file path |
+| `--dest` | `-d` | Destination file path |
+| `--to-remote` | `-to` | Copy to remote (default is from remote) |
 
 ## 🤝 Contributing
 
